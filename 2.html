@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemistry Flash Cards</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#fff;
+    color:#000;
+    font-family:Arial,sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+.container{
+    width:90%;
+    max-width:650px;
+    border:2px solid #000;
+    padding:30px;
+    border-radius:15px;
+}
+
+h1{
+    text-align:center;
+    margin-top:0;
+}
+
+#formula{
+    text-align:center;
+    font-size:52px;
+    font-weight:bold;
+    margin:30px 0;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin:8px 0;
+    border:2px solid #000;
+    background:white;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    background:black;
+    color:white;
+}
+
+.correct{
+    background:#22c55e !important;
+    color:white !important;
+    border-color:#22c55e !important;
+}
+
+.wrong{
+    background:#ef4444 !important;
+    color:white !important;
+    border-color:#ef4444 !important;
+}
+
+#result{
+    text-align:center;
+    font-size:20px;
+    margin-top:20px;
+    min-height:30px;
+}
+
+#stats{
+    margin-top:20px;
+    text-align:center;
+    font-size:18px;
+}
+
+.progress{
+    margin-top:20px;
+    width:100%;
+    height:15px;
+    border:2px solid black;
+}
+
+.progress-bar{
+    height:100%;
+    width:0%;
+    background:black;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🧪 Chemistry Flash Cards</h1>
+
+<div id="formula">CH₄</div>
+
+<div id="choices"></div>
+
+<div id="result"></div>
+
+<div id="stats">
+คะแนน: <span id="correct">0</span> /
+<span id="total">0</span>
+<br>
+ความแม่นยำ:
+<span id="accuracy">0</span>%
+</div>
+
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
+</div>
+
+<script>
+
+const chemicals = [
+
+{formula:"H₂O",name:"น้ำ"},
+{formula:"CO₂",name:"คาร์บอนไดออกไซด์"},
+{formula:"CO",name:"คาร์บอนมอนอกไซด์"},
+{formula:"NH₃",name:"แอมโมเนีย"},
+{formula:"CH₄",name:"มีเทน"},
+{formula:"H₂O₂",name:"ไฮโดรเจนเปอร์ออกไซด์"},
+{formula:"HCl",name:"กรดไฮโดรคลอริก"},
+{formula:"H₂SO₄",name:"กรดซัลฟิวริก"},
+{formula:"HNO₃",name:"กรดไนตริก"},
+{formula:"NaCl",name:"เกลือแกง"},
+{formula:"C₂H₆",name:"อีเทน"},
+{formula:"C₃H₈",name:"โพรเพน"},
+{formula:"C₄H₁₀",name:"บิวเทน"},
+{formula:"C₅H₁₂",name:"เพนเทน"},
+{formula:"C₆H₁₄",name:"เฮกเซน"},
+{formula:"C₇H₁₆",name:"เฮปเทน"},
+{formula:"C₈H₁₈",name:"ออกเทน"},
+{formula:"C₂H₄",name:"อีทีน"},
+{formula:"C₃H₆",name:"โพรพีน"},
+{formula:"C₂H₂",name:"อะเซทิลีน"},
+{formula:"CH₃OH",name:"เมทานอล"},
+{formula:"C₂H₅OH",name:"เอทานอล"},
+{formula:"CH₃COOH",name:"กรดอะซิติก"},
+{formula:"C₆H₁₂O₆",name:"กลูโคส"},
+{formula:"C₁₂H₂₂O₁₁",name:"ซูโครส"},
+{formula:"CaCO₃",name:"แคลเซียมคาร์บอเนต"},
+{formula:"NaHCO₃",name:"เบกกิ้งโซดา"},
+{formula:"NaOH",name:"โซเดียมไฮดรอกไซด์"},
+{formula:"KOH",name:"โพแทสเซียมไฮดรอกไซด์"},
+{formula:"O₂",name:"ออกซิเจน"},
+{formula:"O₃",name:"โอโซน"},
+{formula:"H₂",name:"ไฮโดรเจน"},
+{formula:"N₂",name:"ไนโตรเจน"},
+{formula:"Cl₂",name:"คลอรีน"},
+{formula:"SO₂",name:"ซัลเฟอร์ไดออกไซด์"},
+{formula:"SO₃",name:"ซัลเฟอร์ไตรออกไซด์"},
+{formula:"NO₂",name:"ไนโตรเจนไดออกไซด์"}
+
+];
+
+let currentQuestion;
+let correctScore = 0;
+let totalScore = 0;
+
+function shuffle(array){
+    return array.sort(() => Math.random() - 0.5);
+}
+
+function newQuestion(){
+
+    currentQuestion =
+    chemicals[Math.floor(Math.random()*chemicals.length)];
+
+    document.getElementById("formula").innerText =
+    currentQuestion.formula;
+
+    let options = [currentQuestion.name];
+
+    while(options.length < 4){
+
+        let randomName =
+        chemicals[Math.floor(Math.random()*chemicals.length)].name;
+
+        if(!options.includes(randomName)){
+            options.push(randomName);
+        }
+    }
+
+    options = shuffle(options);
+
+    let html = "";
+
+    options.forEach(option=>{
+
+        html += `
+        <button onclick="checkAnswer(this,'${option}')">
+            ${option}
+        </button>
+        `;
+
+    });
+
+    document.getElementById("choices").innerHTML = html;
+}
+
+function checkAnswer(button,answer){
+
+    const buttons =
+    document.querySelectorAll("#choices button");
+
+    buttons.forEach(btn=>btn.disabled=true);
+
+    totalScore++;
+
+    if(answer === currentQuestion.name){
+
+        correctScore++;
+
+        button.classList.add("correct");
+
+        document.getElementById("result").innerHTML =
+        "✅ ถูกต้อง";
+
+    }else{
+
+        button.classList.add("wrong");
+
+        buttons.forEach(btn=>{
+
+            if(btn.innerText === currentQuestion.name){
+                btn.classList.add("correct");
+            }
+
+        });
+
+        document.getElementById("result").innerHTML =
+        "❌ ผิด<br>คำตอบคือ <b>" +
+        currentQuestion.name +
+        "</b>";
+    }
+
+    updateStats();
+
+    setTimeout(()=>{
+        document.getElementById("result").innerHTML="";
+        newQuestion();
+    },1500);
+}
+
+function updateStats(){
+
+    document.getElementById("correct").innerText =
+    correctScore;
+
+    document.getElementById("total").innerText =
+    totalScore;
+
+    let accuracy =
+    Math.round((correctScore/totalScore)*100);
+
+    if(isNaN(accuracy)) accuracy = 0;
+
+    document.getElementById("accuracy").innerText =
+    accuracy;
+
+    document.getElementById("progressBar").style.width =
+    accuracy + "%";
+}
+
+newQuestion();
+
+</script>
+
+</body>
+</html>
